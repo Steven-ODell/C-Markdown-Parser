@@ -14,6 +14,8 @@ public:
   blockParser(std::vector<Token> *t);
   std::vector<blockNode> createTree();
   void parseP();
+  void parseCodeblock();
+  void parseBlockquote();
   void parseOl();
   void parseUl();
 };

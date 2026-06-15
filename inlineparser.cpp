@@ -1,4 +1,5 @@
 #include "inlineparser.h"
+#include "nodes.h"
 #include "tokenizer.h"
 #include <iostream>
 
@@ -59,6 +60,13 @@ std::vector<inlineNode> inlineParser::parseInlineChildren(int closer) {
         curTok++;
       }
       children.push_back(linkNode);
+      curTok++;
+    }
+    else if (t == indent) {
+      inlineNode indentNode;
+      indentNode.type = indent;
+      indentNode.value = (*pTree)[curBlock].blockToks[curTok].value;
+      children.push_back(indentNode);
       curTok++;
     }
     else if (t == word || t == space || t == digit || t == period || t == comma) {

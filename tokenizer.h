@@ -7,6 +7,7 @@ enum TokenType {
   h1,
   h2,
   h3,
+  codeblock,
   blockquote,
   ul,
   ol,

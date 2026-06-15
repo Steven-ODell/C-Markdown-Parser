@@ -36,6 +36,22 @@ std::vector<Token> Lexer::tokenize() {
       c++;
       blockindex++;
     }
+    else if ((*source)[c] == '`' && (*source)[c+1] == '`' && (*source)[c+2] == '`') {
+      t.type = codeblock;
+      t.value = "```";
+      t.index = blockindex;
+      tokens.push_back(t);
+      c += 3;
+      blockindex++;
+    }
+    else if ((*source)[c] == '`') {
+      t.type = code;
+      t.value = "`";
+      t.index = blockindex;
+      tokens.push_back(t);
+      c++;
+      blockindex++;
+    }
     else if ((*source)[c] == '>') {
       t.type = blockquote;
       t.value = ">";
@@ -104,10 +120,17 @@ std::vector<Token> Lexer::tokenize() {
       }
       else if (isspace((*source)[c]) && isspace((*source)[c+1]) && isspace((*source)[c+2]) && isspace((*source)[c+3])) {
         t.type = indent;
-        t.value = "    ";
+        t.value = "'    '";
         t.index = blockindex;
         tokens.push_back(t);
         c+=4;
+      }
+      else if (isspace((*source)[c]) && isspace((*source)[c+1])) {
+        t.type = indent;
+        t.value = "'  '";
+        t.index = blockindex;
+        tokens.push_back(t);
+        c+=2;
       }
       else {
         t.type = space;
