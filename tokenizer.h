@@ -1,8 +1,10 @@
 #pragma once
+#include <string_view>
 #include <vector>
 #include <string>
 
 enum TokenType {
+  dead,
   hr,
   h1,
   h2,
@@ -54,9 +56,9 @@ class Lexer {
 private:
   int c;
   int blockindex;
-  std::string *source;
+  std::string_view source;
   std::vector<Token> tokens;
 public:
-  Lexer(std::string *incoming_string);
+  Lexer(std::string &incoming_string);
   std::vector<Token> tokenize();
 };

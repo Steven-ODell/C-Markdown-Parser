@@ -11,7 +11,7 @@ int main() {
   std::string* pInputfile = &inputfile;
   std::cout << "Parsing:\n" << inputfile << std::endl;
 
-  Lexer lex(pInputfile);
+  Lexer lex(*pInputfile);
   std::vector<Token> allTokens = lex.tokenize();
   std::vector<Token> *pAllTokens = &allTokens;
 

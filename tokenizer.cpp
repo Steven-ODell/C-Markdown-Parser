@@ -3,7 +3,7 @@
 #include <iostream>
 
 
-Lexer::Lexer(std::string *incoming_string) {
+Lexer::Lexer(std::string &incoming_string) {
   source = incoming_string;
   c = 0;
   blockindex = 0;
@@ -11,8 +11,8 @@ Lexer::Lexer(std::string *incoming_string) {
 
 std::vector<Token> Lexer::tokenize() {
   Token t;
-  while (c < (*source).length()) {
-    if ((*source)[c] == '#' && (*source)[c+1] == '#' && (*source)[c+2] == '#') {
+  while (c < source.length()) {
+    if (source[c] == '#' && source[c+1] == '#' && source[c+2] == '#') {
       t.type = h3;
       t.value = "###";
       t.index = blockindex;
@@ -20,7 +20,7 @@ std::vector<Token> Lexer::tokenize() {
       c += 3;
       blockindex++;
     }
-    else if ((*source)[c] == '#' && (*source)[c+1] == '#') {
+    else if (source[c] == '#' && source[c+1] == '#') {
       t.type = h2;
       t.value = "##";
       t.index = blockindex;
@@ -28,7 +28,7 @@ std::vector<Token> Lexer::tokenize() {
       c += 2;
       blockindex++;
     }
-    else if ((*source)[c] == '#') {
+    else if (source[c] == '#') {
       t.type = h1;
       t.value = "#";
       t.index = blockindex;
@@ -36,7 +36,7 @@ std::vector<Token> Lexer::tokenize() {
       c++;
       blockindex++;
     }
-    else if ((*source)[c] == '`' && (*source)[c+1] == '`' && (*source)[c+2] == '`') {
+    else if (source[c] == '`' && source[c+1] == '`' && source[c+2] == '`') {
       t.type = codeblock;
       t.value = "```";
       t.index = blockindex;
@@ -44,7 +44,7 @@ std::vector<Token> Lexer::tokenize() {
       c += 3;
       blockindex++;
     }
-    else if ((*source)[c] == '`') {
+    else if (source[c] == '`') {
       t.type = code;
       t.value = "`";
       t.index = blockindex;
@@ -52,7 +52,7 @@ std::vector<Token> Lexer::tokenize() {
       c++;
       blockindex++;
     }
-    else if ((*source)[c] == '>') {
+    else if (source[c] == '>') {
       t.type = blockquote;
       t.value = ">";
       t.index = blockindex;
@@ -60,7 +60,7 @@ std::vector<Token> Lexer::tokenize() {
       c++;
       blockindex++;
     }
-    else if ((*source)[c] == '-' && (*source)[c+1] == '-' && (*source)[c+2] == '-') {
+    else if (source[c] == '-' && source[c+1] == '-' && source[c+2] == '-') {
       t.type = hr;
       t.value = "---";
       t.index = blockindex;
@@ -68,7 +68,7 @@ std::vector<Token> Lexer::tokenize() {
       c += 3;
       blockindex++;
     }
-    else if ((*source)[c] == '-') {
+    else if (source[c] == '-') {
       t.type = ul;
       t.value = "-";
       t.index = blockindex;
@@ -76,11 +76,11 @@ std::vector<Token> Lexer::tokenize() {
       c++;
       blockindex++;
     }
-    else if (isalpha((*source)[c]) || (*source)[c] == '\'') {
+    else if (isalpha(source[c]) || source[c] == '\'') {
       t.type = word;
       std::string new_word;
-      while (isalpha((*source)[c]) || (*source)[c] == '\'') {
-        new_word += (*source)[c];
+      while (isalpha(source[c]) || source[c] == '\'') {
+        new_word += source[c];
         c++;
       }
       t.value = new_word;
@@ -88,20 +88,20 @@ std::vector<Token> Lexer::tokenize() {
       tokens.push_back(t);
       blockindex++;
     }
-    else if (isdigit((*source)[c]) && (*source)[c+1] == '.') {
+    else if (isdigit(source[c]) && source[c+1] == '.') {
       t.type = ol;
-      t.value = (*source)[c];
+      t.value = source[c];
       t.value += '.';
       t.index = blockindex;
       tokens.push_back(t);
       c += 2;
       blockindex++;
     }
-    else if (isdigit((*source)[c])) {
+    else if (isdigit(source[c])) {
       t.type = digit;
       std::string new_digit;
-      while (isdigit((*source)[c])) {
-        new_digit += (*source)[c];
+      while (isdigit(source[c])) {
+        new_digit += source[c];
         c++;
       }
       t.value = new_digit;
@@ -109,8 +109,8 @@ std::vector<Token> Lexer::tokenize() {
       tokens.push_back(t);
       blockindex++;
     }
-    else if (isspace((*source)[c])) {
-      if ((*source)[c] == '\n') {
+    else if (isspace(source[c])) {
+      if (source[c] == '\n') {
         t.type = newLine;
         t.value = "\\n";
         t.index = blockindex;
@@ -118,14 +118,14 @@ std::vector<Token> Lexer::tokenize() {
         tokens.push_back(t);
         c++;
       }
-      else if (isspace((*source)[c]) && isspace((*source)[c+1]) && isspace((*source)[c+2]) && isspace((*source)[c+3])) {
+      else if (isspace(source[c]) && isspace(source[c+1]) && isspace(source[c+2]) && isspace(source[c+3])) {
         t.type = indent;
         t.value = "'    '";
         t.index = blockindex;
         tokens.push_back(t);
         c+=4;
       }
-      else if (isspace((*source)[c]) && isspace((*source)[c+1])) {
+      else if (isspace(source[c]) && isspace(source[c+1])) {
         t.type = indent;
         t.value = "'  '";
         t.index = blockindex;
@@ -141,7 +141,7 @@ std::vector<Token> Lexer::tokenize() {
         blockindex++;
       }
     }
-    else if ((*source)[c] == '*' && (*source)[c+1] == '*' && (*source)[c+2] == '*') {
+    else if (source[c] == '*' && source[c+1] == '*' && source[c+2] == '*') {
       t.type = strongEm;
       t.value = "***";
       t.index = blockindex;
@@ -149,7 +149,7 @@ std::vector<Token> Lexer::tokenize() {
       c += 3;
       blockindex++;
     }
-    else if ((*source)[c] == '*' && (*source)[c+1] == '*') {
+    else if (source[c] == '*' && source[c+1] == '*') {
       t.type = strong;
       t.value = "**";
       t.index = blockindex;
@@ -157,7 +157,7 @@ std::vector<Token> Lexer::tokenize() {
       c += 2;
       blockindex++;
     }
-    else if ((*source)[c] == '*') {
+    else if (source[c] == '*') {
       t.type = em;
       t.value = "*";
       t.index = blockindex;
@@ -165,7 +165,7 @@ std::vector<Token> Lexer::tokenize() {
       c++;
       blockindex++;
     }
-    else if ((*source)[c] == '=' && (*source)[c+1] == '=') {
+    else if (source[c] == '=' && source[c+1] == '=') {
       t.type = mark;
       t.value = "==";
       t.index = blockindex;
@@ -173,7 +173,7 @@ std::vector<Token> Lexer::tokenize() {
       c += 2;
       blockindex++;
     }
-    else if ((*source)[c] == '~' && (*source)[c+1] == '~') {
+    else if (source[c] == '~' && source[c+1] == '~') {
       t.type = del;
       t.value = "~~";
       t.index = blockindex;
@@ -181,7 +181,7 @@ std::vector<Token> Lexer::tokenize() {
       c += 2;
       blockindex++;
     }
-    else if ((*source)[c] == '~') {
+    else if (source[c] == '~') {
       t.type = sub;
       t.value = "~";
       t.index = blockindex;
@@ -189,7 +189,7 @@ std::vector<Token> Lexer::tokenize() {
       c++;
       blockindex++;
     }
-    else if ((*source)[c] == '^') {
+    else if (source[c] == '^') {
       t.type = sup;
       t.value = "^";
       t.index = blockindex;
@@ -197,7 +197,7 @@ std::vector<Token> Lexer::tokenize() {
       c++;
       blockindex++;
     }
-    else if ((*source)[c] == '`') {
+    else if (source[c] == '`') {
       t.type = code;
       t.value = "`";
       t.index = blockindex;
@@ -205,7 +205,7 @@ std::vector<Token> Lexer::tokenize() {
       c++;
       blockindex++;
     }
-    else if ((*source)[c] == '[') {
+    else if (source[c] == '[') {
       t.type = lBracket;
       t.value = "[";
       t.index = blockindex;
@@ -213,7 +213,7 @@ std::vector<Token> Lexer::tokenize() {
       c++;
       blockindex++;
     }
-    else if ((*source)[c] == ']') {
+    else if (source[c] == ']') {
       t.type = rBracket;
       t.value = "]";
       t.index = blockindex;
@@ -221,7 +221,7 @@ std::vector<Token> Lexer::tokenize() {
       c++;
       blockindex++;
     }
-    else if ((*source)[c] == '(') {
+    else if (source[c] == '(') {
       t.type = lParen;
       t.value = "(";
       t.index = blockindex;
@@ -229,7 +229,7 @@ std::vector<Token> Lexer::tokenize() {
       c++;
       blockindex++;
     }
-    else if ((*source)[c] == ')') {
+    else if (source[c] == ')') {
       t.type = rParen;
       t.value = ")";
       t.index = blockindex;
@@ -237,7 +237,7 @@ std::vector<Token> Lexer::tokenize() {
       c++;
       blockindex++;
     }
-    else if ((*source)[c] == '.') {
+    else if (source[c] == '.') {
       t.type = period;
       t.value = ".";
       t.index = blockindex;
@@ -245,7 +245,7 @@ std::vector<Token> Lexer::tokenize() {
       c++;
       blockindex++;
     }
-    else if ((*source)[c] == ',') {
+    else if (source[c] == ',') {
       t.type = comma;
       t.value = ",";
       t.index = blockindex;
@@ -253,7 +253,7 @@ std::vector<Token> Lexer::tokenize() {
       c++;
       blockindex++;
     }
-    else if ((*source)[c] == '\'') {
+    else if (source[c] == '\'') {
       t.type = quote;
       t.value = "'";
       t.index = blockindex;
@@ -261,7 +261,7 @@ std::vector<Token> Lexer::tokenize() {
       c++;
       blockindex++;
     }
-    else if ((*source)[c] == '"') {
+    else if (source[c] == '"') {
       t.type = dQuote;
       t.value = "\"";
       t.index = blockindex;
@@ -269,7 +269,7 @@ std::vector<Token> Lexer::tokenize() {
       c++;
       blockindex++;
     }
-    else if ((*source)[c] == '/') {
+    else if (source[c] == '/') {
       t.type = fSlash;
       t.value = "/";
       t.index = blockindex;
@@ -277,7 +277,7 @@ std::vector<Token> Lexer::tokenize() {
       c++;
       blockindex++;
     }
-    else if ((*source)[c] == '\\') {
+    else if (source[c] == '\\') {
       t.type = bSlash;
       t.value = "\\";
       t.index = blockindex;
@@ -285,7 +285,7 @@ std::vector<Token> Lexer::tokenize() {
       c++;
       blockindex++;
     }
-    else if ((*source)[c] == ':') {
+    else if (source[c] == ':') {
       t.type = colon;
       t.index = blockindex;
       t.value = ":";
@@ -293,7 +293,7 @@ std::vector<Token> Lexer::tokenize() {
       c++;
       blockindex++;
     }
-    else if ((*source)[c] == ';') {
+    else if (source[c] == ';') {
       t.type = semiColon;
       t.value = ";";
       tokens.push_back(t);

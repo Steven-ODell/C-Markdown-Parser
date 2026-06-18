@@ -30,4 +30,4 @@ Paragraph
 2. Write **important** code
 3. Sleep
 
-This is a [link](https://example.com) to somewhere.
+This is a [linkName](https://example.com) to somewhere.
