@@ -93,7 +93,7 @@ std::vector<Token> Lexer::tokenize() {
       blockindex++;
     }
     else if (source[c] == '-') {
-      t.type = ul;
+      t.type = dash;
       t.value = "-";
       t.index = blockindex;
       tokens.push_back(t);

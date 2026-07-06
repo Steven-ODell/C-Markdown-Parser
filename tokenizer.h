@@ -33,6 +33,7 @@ enum TokenType {
   digit,
   word,
   text,
+  dash,
   indent,
   link,
 

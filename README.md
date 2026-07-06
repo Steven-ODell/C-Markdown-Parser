@@ -18,6 +18,8 @@ Reads the source string one character at a time and emits a flat list of typed `
 
 Newline tokens store a real newline character as their value, so line breaks survive into the HTML output — meaningful inside code blocks, where `<pre>` preserves them.
 
+The tokenizer stays deliberately "dumb" about structure: it emits a neutral `dash` token for every `-` rather than deciding whether it's a list bullet. Whether a dash is a bullet or just a hyphen inside a word (`block-level`, `reference-style`) is a positional question the tokenizer can't answer alone, so that decision is left to the block parser, which can see the token's line position and what follows it.
+
 ### Block Parser (`blockparser.h` / `blockparser.cpp`)
 
 Walks the token list and groups tokens into `blockNode` structs, one per block-level element. Most blocks stash their raw tokens in a `blockToks` vector for the inline pass to process later. Supported blocks:
@@ -30,7 +32,7 @@ Walks the token list and groups tokens into `blockNode` structs, one per block-l
 - `ul` — unordered lists, including nested sub-lists detected by indentation depth
 - `ol` — ordered lists, including nested sub-lists
 
-List parsing is recursive: `parseUl` and `parseOl` track indentation depth and call themselves when they encounter a more-deeply-indented item, so a list nests as far as the source does.
+List parsing is recursive: `parseUl` and `parseOl` track indentation depth and call themselves when they encounter a more-deeply-indented item, so a list nests as far as the source does. A `dash` token only becomes a list bullet when it's the first token on its line and followed by a space — a dash inside a word is treated as ordinary text, so hyphenated words no longer get mistaken for list markers.
 
 ### Inline Parser (`inlineparser.h` / `inlineparser.cpp`)
 
@@ -65,7 +67,11 @@ Lists are rendered recursively to match the parser: for each item it emits the i
 ### Working
 
 - Full tokenization of the markdown syntax set
-- Block detection for headings, paragraphs, horizontal rules, blockquotes, code blocks, and ordered/unordered lists
+- Block detection for headings (`h1`–`h6`), paragraphs, horizontal rules, blockquotes, code blocks, and ordered/unordered lists
+- Dashes inside words (`block-level`) correctly treated as text, not list bullets
+- Parses its own README (a non-trivial mixed document) end to end
+- HTML rendering for `h1`–`h3` headings (h4–h6 parsed but not yet rendered — see limitations)
+- Clean list-item text with the marker's trailing space stripped (`<li>Apples`)
 - Correct multi-line paragraph handling (soft break vs. blank-line break)
 - Recursive inline parsing to arbitrary depth (e.g. `*italic **bold** italic*`)
 - Inline formatting inside list items at any nesting depth
@@ -79,8 +85,9 @@ Lists are rendered recursively to match the parser: for each item it emits the i
 ### Known Limitations / Next Up
 
 - An item that has *both* its own inline formatting *and* a sub-list: storing the parsed inline children currently overwrites the item's existing children, so a sub-list on a formatted item can be lost. Present markup doesn't hit this, but it's the next structural edge to handle.
-- List items render with a leading space carried from the marker (`<li> Apples`).
-- Backslash escaping (`\*` for a literal asterisk) is tokenized but not yet honored.
+- `h4`–`h6` are detected by the block parser but the stringifier only emits tags for `h1`–`h3`, so deeper headings don't yet render.
+- Backslash escaping (`\*` for a literal asterisk) is tokenized but not yet honored — an escaped delimiter still opens formatting.
+- Unclosed inline delimiters (a stray `*` or `` ` `` with no matching partner) aren't detected, so an opening delimiter can consume more than intended.
 - Not yet parsed, though tokenized: `del`, `mark`, `sub`, `sup`.
 - Images (`![alt](url)`), reference-style links, and tables.
 
@@ -103,4 +110,4 @@ Defined as an enum in `tokenizer.h`.
 
 - **Block-level:** `hr h1 h2 h3 h4 h5 h6 codeblock blockquote ul ol p`
 - **Inline:** `em strong strongEm del sub sup mark code link`
-- **Structural:** `newLine space digit word text indent lBracket rBracket lParen rParen period comma quote dQuote fSlash bSlash colon semiColon`
+- **Structural:** `newLine space digit word text indent dash lBracket rBracket lParen rParen period comma quote dQuote fSlash bSlash colon semiColon`

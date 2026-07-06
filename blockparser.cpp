@@ -90,7 +90,7 @@ std::vector<blockNode> blockParser::createTree() {
     }
     else if (tok[cur].index == 0 && tok[cur].type == h6 && tok[cur+1].type == space) {
       std::cout << "h6 found" << std::endl;
-      Node.value += "##### ";
+      Node.value += "###### ";
       cur+=2;
       while (tok[cur].type != newLine) {
         Node.value += tok[cur].value;
@@ -133,7 +133,7 @@ std::vector<blockNode> blockParser::createTree() {
       parseP();
       continue;
     }
-    else if (lookAhead < tok.size() && tok[cur].index == 0 && tok[lookAhead].type == ul) {
+    else if (lookAhead < tok.size() && tok[cur].index == 0 && tok[lookAhead].type == dash) {
       std::cout << "Unordered list found" << std::endl;
       blockNode ulNode;
       ulNode.type = ul;
@@ -218,23 +218,27 @@ inlineNode blockParser::parseOl(int myDepth) {
   Node.type = ol;
 
   while (cur < tok.size()) {
+    std::cout << "cur=" << cur << " tok type=" << tok[cur].type << std::endl;
     int depth = 0;
     int peek = cur;
-    while (tok[peek].type == indent) {
+    while (peek < tok.size() && tok[peek].type == indent) {
       depth++;
       peek++;
     }
-    if (tok[peek].type != ol) break;
+    if (peek >= tok.size() || tok[peek].type != ol) break;
     if (depth < myDepth) break;
 
     if (depth > myDepth) {
-      Node.children.back().children.push_back(parseUl(depth));
+      if (Node.children.empty()) break;
+      Node.children.back().children.push_back(parseOl(depth));
+      if (Node.children.empty()) break;
       continue;
     }
     cur = peek + 1;
 
     inlineNode item;
     item.type = text;
+    if (cur < tok.size() && tok[cur].type == space) cur++;
     while (cur < tok.size() && tok[cur].type != newLine) {
       item.value += tok[cur].value;
       item.inlineToks.push_back(tok[cur]);
@@ -251,23 +255,27 @@ inlineNode blockParser::parseUl(int myDepth) {
   Node.type = ul;
 
   while (cur < tok.size()) {
+    std::cout << "cur=" << cur << " tok type=" << tok[cur].type << std::endl;
     int depth = 0;
     int peek = cur;
-    while (tok[peek].type == indent) {
+    while (peek < tok.size() && tok[peek].type == indent) {
       depth++;
       peek++;
     }
-    if (tok[peek].type != ul) break;
+    if (peek >= tok.size() || tok[peek].type != dash) break;
     if (depth < myDepth) break;
 
     if (depth > myDepth) {
+      if (Node.children.empty()) break;
       Node.children.back().children.push_back(parseUl(depth));
+      if (Node.children.empty()) break;
       continue;
     }
     cur = peek + 1;
 
     inlineNode item;
     item.type = text;
+    if (cur < tok.size() && tok[cur].type == space) cur++;
     while (cur < tok.size() && tok[cur].type != newLine) {
       item.value += tok[cur].value;
       item.inlineToks.push_back(tok[cur]);
