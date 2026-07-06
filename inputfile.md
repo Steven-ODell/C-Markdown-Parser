@@ -10,8 +10,8 @@ Hello New Paragraph test no delimiters
 
 - Apples
 - Bananas
-    - Green bananas
-    - Yellow bananas
+    - **Green** bananas
+    - **Yellow** bananas
 - Oranges
 
 ```
@@ -21,7 +21,10 @@ Hello this should be in in the code block
 > What is up? Blockquote? I think
  think
 
+[ open bracket test
 Paragraph
+
+hello `code test` hey end test;
 
 ---
 ### Tasks
@@ -30,4 +33,4 @@ Paragraph
 2. Write **important** code
 3. Sleep
 
-This is a [linkName](https://example.com) to somewhere.
+This is a [link Name](https://example.com) to somewhere.

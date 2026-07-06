@@ -2,6 +2,7 @@
 #include "loadfile.h"
 #include "blockparser.h"
 #include "inlineparser.h"
+#include "stringifier.h"
 #include <iostream>
 
 
@@ -20,8 +21,9 @@ int main() {
 
   std::vector<blockNode>* pBlocks = &blocks;
 
-  inlineParser inlineparser(pBlocks);
+  inlineParser inlineparser(*pBlocks);
   std::vector<blockNode> finalTree = inlineparser.parseInlines();
+  std::vector<blockNode> *pFinalTree = &finalTree;
   
   for (size_t i = 0; i < finalTree.size(); i++) {
     blockNode block = finalTree[i];
@@ -32,6 +34,9 @@ int main() {
       inlineparser.printTree(childNode, 1);
     }
   }
+
+  Stringifier stringmaker(*pFinalTree);
+  stringmaker.createHTML();
   
   return 0;
 }

@@ -9,6 +9,9 @@ enum TokenType {
   h1,
   h2,
   h3,
+  h4,
+  h5,
+  h6,
   codeblock,
   blockquote,
   ul,
@@ -23,6 +26,7 @@ enum TokenType {
   sup,
   mark,
   code,
+
 
   newLine,
   space,

@@ -60,6 +60,48 @@ std::vector<blockNode> blockParser::createTree() {
       tree.push_back(Node);
       cur++;
     }
+    else if (tok[cur].index == 0 && tok[cur].type == h4 && tok[cur+1].type == space) {
+      std::cout << "h4 found" << std::endl;
+      Node.value += "#### ";
+      cur+=2;
+      while (tok[cur].type != newLine) {
+        Node.value += tok[cur].value;
+        Node.type = h4;
+        Node.blockToks.push_back(tok[cur]);
+        cur++;
+      }
+      std::cout << Node.value << std::endl;
+      tree.push_back(Node);
+      cur++;
+    }
+    else if (tok[cur].index == 0 && tok[cur].type == h5 && tok[cur+1].type == space) {
+      std::cout << "h5 found" << std::endl;
+      Node.value += "##### ";
+      cur+=2;
+      while (tok[cur].type != newLine) {
+        Node.value += tok[cur].value;
+        Node.type = h5;
+        Node.blockToks.push_back(tok[cur]);
+        cur++;
+      }
+      std::cout << Node.value << std::endl;
+      tree.push_back(Node);
+      cur++;
+    }
+    else if (tok[cur].index == 0 && tok[cur].type == h6 && tok[cur+1].type == space) {
+      std::cout << "h6 found" << std::endl;
+      Node.value += "##### ";
+      cur+=2;
+      while (tok[cur].type != newLine) {
+        Node.value += tok[cur].value;
+        Node.type = h6;
+        Node.blockToks.push_back(tok[cur]);
+        cur++;
+      }
+      std::cout << Node.value << std::endl;
+      tree.push_back(Node);
+      cur++;
+    }
     else if (tok[cur].index == 0 && tok[cur].type == blockquote) {
       std::cout << "Blockquote found" << std::endl;
       parseBlockquote();
@@ -72,7 +114,7 @@ std::vector<blockNode> blockParser::createTree() {
     }
     else if (tok[cur].index == 0 && tok[cur].type == hr) {
       std::cout << "line found" << std::endl;
-      if (cur + 1 < tok.size() && tok[cur+1].type != space && tok[cur+1].type != hr && tok[cur+1].type != newLine) {
+      if (cur + 3 < tok.size() && tok[cur+1].type != space && tok[cur+1].type != hr && tok[cur+1].type != newLine) {
         parseP();
         continue;
       }
@@ -86,20 +128,37 @@ std::vector<blockNode> blockParser::createTree() {
       tree.push_back(Node);
       if (cur < tok.size()) cur++;
     }
-    else if (tok[cur].index == 0 && (tok[cur].type == word || tok[cur].type == digit)) {
+    else if (tok[cur].index == 0 && (tok[cur].type == word || tok[cur].type == digit || tok[cur].type == lBracket)) {
       std::cout << "Paragraph found" << std::endl;
       parseP();
       continue;
     }
     else if (lookAhead < tok.size() && tok[cur].index == 0 && tok[lookAhead].type == ul) {
       std::cout << "Unordered list found" << std::endl;
-      parseUl();
+      blockNode ulNode;
+      ulNode.type = ul;
+      inlineNode listContent = parseUl(0);
+      ulNode.children = listContent.children;
+      tree.push_back(ulNode);
+      cur++;
       continue;
     }
     else if (lookAhead < tok.size() && tok[cur].index == 0 && tok[lookAhead].type == ol) {
       std::cout << "Ordered list found" << std::endl;
-      parseOl();
+      blockNode olNode;
+      olNode.type = ol;
+      inlineNode listContent = parseOl(0);
+      olNode.children = listContent.children;
+      tree.push_back(olNode);
+      cur++;
       continue;
+    }
+    else if (tok[cur].type == newLine) {
+      blockNode newlineNode;
+      newlineNode.type = newLine;
+      newlineNode.value = "\\n";
+      tree.push_back(newlineNode);
+      cur++;
     }
     else cur++;
   }
@@ -123,7 +182,6 @@ void blockParser::parseBlockquote() {
   blockNode Node;
   Node.type = blockquote;
   Node.value += tok[cur].value;
-  Node.blockToks.push_back(tok[cur]);
   cur++;
   if (cur < tok.size() && tok[cur].type == space) {
     Node.value += tok[cur].value;
@@ -135,53 +193,89 @@ void blockParser::parseBlockquote() {
     cur++;
   }
   Node.blockToks.push_back(tok[cur]);
-  Node.value += tok[cur].value;
   if (cur < tok.size()) cur++;
   std::cout << Node.value << std::endl;
+  Node.value += tok[cur].value;
   tree.push_back(Node);
 }
 
 void blockParser::parseCodeblock() {
   blockNode Node;
   Node.type = codeblock;
-  Node.value += tok[cur].value;
-  Node.blockToks.push_back(tok[cur]);
   cur++;
   while (cur + 1 < tok.size() && tok[cur].type != codeblock) {
     Node.value += tok[cur].value;
     Node.blockToks.push_back(tok[cur]);
     cur++;
   }
-  Node.blockToks.push_back(tok[cur]);
-  Node.value += tok[cur].value;
   if (cur < tok.size()) cur++;
   std::cout << Node.value << std::endl;
   tree.push_back(Node);
 }
 
-void blockParser::parseOl() {
-  blockNode Node;
+inlineNode blockParser::parseOl(int myDepth) {
+  inlineNode Node;
   Node.type = ol;
-  while (cur + 1 < tok.size() && tok[cur].type != newLine) {
-    Node.value += tok[cur].value;
-    Node.blockToks.push_back(tok[cur]);
-    cur++;
+
+  while (cur < tok.size()) {
+    int depth = 0;
+    int peek = cur;
+    while (tok[peek].type == indent) {
+      depth++;
+      peek++;
+    }
+    if (tok[peek].type != ol) break;
+    if (depth < myDepth) break;
+
+    if (depth > myDepth) {
+      Node.children.back().children.push_back(parseUl(depth));
+      continue;
+    }
+    cur = peek + 1;
+
+    inlineNode item;
+    item.type = text;
+    while (cur < tok.size() && tok[cur].type != newLine) {
+      item.value += tok[cur].value;
+      item.inlineToks.push_back(tok[cur]);
+      cur++;
+    }
+    if (cur < tok.size() && tok[cur].type == newLine) cur++;
+    Node.children.push_back(item);
   }
-  std::cout << Node.value << std::endl;
-  tree.push_back(Node);
-  if (cur < tok.size()) cur++;
+  return Node;
 }
 
-void blockParser::parseUl() {
-  blockNode Node;
+inlineNode blockParser::parseUl(int myDepth) {
+  inlineNode Node;
   Node.type = ul;
-  while (cur + 1 < tok.size() && tok[cur].type != newLine) {
-    Node.value += tok[cur].value;
-    Node.blockToks.push_back(tok[cur]);
-    cur++;
+
+  while (cur < tok.size()) {
+    int depth = 0;
+    int peek = cur;
+    while (tok[peek].type == indent) {
+      depth++;
+      peek++;
+    }
+    if (tok[peek].type != ul) break;
+    if (depth < myDepth) break;
+
+    if (depth > myDepth) {
+      Node.children.back().children.push_back(parseUl(depth));
+      continue;
+    }
+    cur = peek + 1;
+
+    inlineNode item;
+    item.type = text;
+    while (cur < tok.size() && tok[cur].type != newLine) {
+      item.value += tok[cur].value;
+      item.inlineToks.push_back(tok[cur]);
+      cur++;
+    }
+    if (cur < tok.size() && tok[cur].type == newLine) cur++;
+    Node.children.push_back(item);
   }
-  std::cout << Node.value << std::endl;
-  tree.push_back(Node);
-  if (cur < tok.size()) cur++;
+  return Node;
 }
 

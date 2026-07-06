@@ -12,7 +12,31 @@ Lexer::Lexer(std::string &incoming_string) {
 std::vector<Token> Lexer::tokenize() {
   Token t;
   while (c < source.length()) {
-    if (source[c] == '#' && source[c+1] == '#' && source[c+2] == '#') {
+    if (source[c] == '#' && source[c+1] == '#' && source[c+2] == '#' && source[c+3] == '#' && source[c+4] == '#' && source[c+5] == '#') {
+      t.type = h6;
+      t.value = "######";
+      t.index = blockindex;
+      tokens.push_back(t);
+      c += 6;
+      blockindex++;
+    }
+    else if (source[c] == '#' && source[c+1] == '#' && source[c+2] == '#' && source[c+3] == '#' && source[c+4] == '#') {
+      t.type = h5;
+      t.value = "#####";
+      t.index = blockindex;
+      tokens.push_back(t);
+      c += 5;
+      blockindex++;
+    }
+    else if (source[c] == '#' && source[c+1] == '#' && source[c+2] == '#' && source[c+3] == '#') {
+      t.type = h4;
+      t.value = "####";
+      t.index = blockindex;
+      tokens.push_back(t);
+      c += 4;
+      blockindex++;
+    }
+    else if (source[c] == '#' && source[c+1] == '#' && source[c+2] == '#') {
       t.type = h3;
       t.value = "###";
       t.index = blockindex;
@@ -112,7 +136,7 @@ std::vector<Token> Lexer::tokenize() {
     else if (isspace(source[c])) {
       if (source[c] == '\n') {
         t.type = newLine;
-        t.value = "\\n";
+        t.value = "\n";
         t.index = blockindex;
         blockindex = 0;
         tokens.push_back(t);

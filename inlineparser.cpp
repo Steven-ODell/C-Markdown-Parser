@@ -3,27 +3,54 @@
 #include "tokenizer.h"
 #include <iostream>
 
-inlineParser::inlineParser(std::vector<blockNode>* tree) {
+inlineParser::inlineParser(std::vector<blockNode> &tree) : blocks(tree) {
   curBlock = 0;
   curTok = 0;
-  pTree = tree;
 }
 
 std::vector<blockNode> inlineParser::parseInlines() {
-  while (curBlock < pTree->size()) {
+  while (curBlock < blocks.size()) {
     curTok = 0;
-    if ((*pTree)[curBlock].blockToks.size() > 0) {
-      (*pTree)[curBlock].children = parseInlineChildren(-1);
+    if (blocks[curBlock].type == ul || blocks[curBlock].type == ol) {
+      listCheck(&blocks[curBlock].children);
+    }
+    else if (blocks[curBlock].blockToks.size() > 0) {
+      activeToks = &blocks[curBlock].blockToks;
+      blocks[curBlock].children = parseInlineChildren(-1);
     }
     curBlock++;
   } 
-  return *pTree;
+  return blocks;
+}
+
+
+void inlineParser::listCheck(std::vector<inlineNode>* inlineList) {
+  for (int i = 0; i < inlineList->size(); i++) {
+    inlineNode& item = (*inlineList)[i];
+    if (item.inlineToks.size() > 0) {
+      curTok = 0;
+      activeToks = &(*inlineList)[i].inlineToks;
+      std::vector<inlineNode> parsed = parseInlineChildren(-1);
+      if (parsed.size() == 1 && parsed[0].children.size() == 0) {
+        (*inlineList)[i].value = parsed[0].value;
+      }
+      else {
+        (*inlineList)[i].children = parsed;
+        (*inlineList)[i].value = "";
+      }
+    }
+    for (int k = 0; k < (*inlineList)[i].children.size(); k++) {
+      if ((*inlineList)[i].children[k].type == ul || (*inlineList)[i].children[k].type == ol) {
+        listCheck(&(*inlineList)[i].children[k].children);
+      }
+    }
+  }
 }
 
 std::vector<inlineNode> inlineParser::parseInlineChildren(int closer) {
   std::vector<inlineNode> children;
-  while (curTok < (*pTree)[curBlock].blockToks.size()) {
-    int t = (*pTree)[curBlock].blockToks[curTok].type;
+  while (curTok < (*activeToks).size()) {
+    int t = (*activeToks)[curTok].type;
     if (t == closer) {
     curTok++;
     return children;
@@ -49,31 +76,63 @@ std::vector<inlineNode> inlineParser::parseInlineChildren(int closer) {
       emNode.children = parseInlineChildren(em);
       children.push_back(emNode);
     }
+    else if (t == code) {
+      inlineNode codeNode;
+      codeNode.type = code;
+      curTok++;
+      codeNode.children = parseInlineChildren(code);
+      children.push_back(codeNode);
+    }
     else if (t == hr) {
       curTok++;
     }
-    else if (t == link) {
-      inlineNode linkNode;
-      linkNode.type = link;
-      while (curTok < (*pTree)[curBlock].blockToks.size() && ((*pTree)[curBlock].blockToks[curTok].type == space || (*pTree)[curBlock].blockToks[curTok].type == newLine)) {
-        linkNode.children = parseInlineChildren(rParen);
-        curTok++;
+    else if (t == lBracket) {
+      int peek = curTok+1;
+      bool foundClose = false;
+      while (peek < (*activeToks).size()) {
+        if ((*activeToks)[peek].type == rBracket) {
+          foundClose = true;
+          break;
+        }
+        peek++;
       }
-      children.push_back(linkNode);
-      curTok++;
+
+      if (!foundClose) {
+        inlineNode textNode;
+        textNode.type = text;
+        while (curTok < (*activeToks).size() && ((*activeToks)[curTok].type == word || (*activeToks)[curTok].type == space || (*activeToks)[curTok].type == period || (*activeToks)[curTok].type == comma || (*activeToks)[curTok].type == digit || (*activeToks)[curTok].type == colon || (*activeToks)[curTok].type == fSlash || (*activeToks)[curTok].type == bSlash || (*activeToks)[curTok].type == lBracket)) {
+          textNode.value += (*activeToks)[curTok].value;
+          curTok++;
+        }
+        children.push_back(textNode);
+      }
+      else {
+        inlineNode bracketNode;
+        bracketNode.type = lBracket;
+        curTok++;
+        bracketNode.children = parseInlineChildren(rBracket);
+        if ((*activeToks)[curTok].type == lParen) {
+          curTok++;
+          bracketNode.type = link;
+          bracketNode.value = "";
+          int nodesize = bracketNode.children.size();
+          bracketNode.children[nodesize-1].children = parseInlineChildren(rParen);
+        }
+        children.push_back(bracketNode);
+      }
     }
     else if (t == indent) {
       inlineNode indentNode;
       indentNode.type = indent;
-      indentNode.value = (*pTree)[curBlock].blockToks[curTok].value;
+      indentNode.value = (*activeToks)[curTok].value;
       children.push_back(indentNode);
       curTok++;
     }
-    else if (t == word || t == space || t == digit || t == period || t == comma) {
+    else if (t == newLine || t == word || t == space || t == digit || t == period || t == comma || t == colon || t == fSlash || t == bSlash) {
       inlineNode textNode;
       textNode.type = text;
-      while (curTok < (*pTree)[curBlock].blockToks.size() && ((*pTree)[curBlock].blockToks[curTok].type == word || (*pTree)[curBlock].blockToks[curTok].type == space || (*pTree)[curBlock].blockToks[curTok].type == period || (*pTree)[curBlock].blockToks[curTok].type == comma || (*pTree)[curBlock].blockToks[curTok].type == digit)) {
-        textNode.value += (*pTree)[curBlock].blockToks[curTok].value;
+      while (curTok < (*activeToks).size() && ((*activeToks)[curTok].type == newLine || (*activeToks)[curTok].type == word || (*activeToks)[curTok].type == space || (*activeToks)[curTok].type == period || (*activeToks)[curTok].type == comma || (*activeToks)[curTok].type == digit || (*activeToks)[curTok].type == colon || (*activeToks)[curTok].type == fSlash || (*activeToks)[curTok].type == bSlash)) {
+        textNode.value += (*activeToks)[curTok].value;
         curTok++;
       }
       children.push_back(textNode);
@@ -84,14 +143,16 @@ std::vector<inlineNode> inlineParser::parseInlineChildren(int closer) {
     else if (t == ul || t == ol) {
       inlineNode markerNode;
       markerNode.type = t;
-      markerNode.value = (*pTree)[curBlock].blockToks[curTok].value;
+      while (curTok < (*activeToks).size() && ((*activeToks)[curTok].type == newLine || (*activeToks)[curTok].type == word || (*activeToks)[curTok].type == space || (*activeToks)[curTok].type == period || (*activeToks)[curTok].type == comma || (*activeToks)[curTok].type == digit || (*activeToks)[curTok].type == colon || (*activeToks)[curTok].type == fSlash || (*activeToks)[curTok].type == bSlash)) {
+        markerNode.value += (*activeToks)[curTok].value;
+        curTok++;
+      }
       children.push_back(markerNode);
-      curTok++;
     }
     else {
       inlineNode miscNode;
       miscNode.type = text;
-      miscNode.value = (*pTree)[curBlock].blockToks[curTok].value;
+      miscNode.value = (*activeToks)[curTok].value;
       children.push_back(miscNode);
       curTok++;
     }

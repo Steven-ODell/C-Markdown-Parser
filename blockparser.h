@@ -16,6 +16,6 @@ public:
   void parseP();
   void parseCodeblock();
   void parseBlockquote();
-  void parseOl();
-  void parseUl();
+  inlineNode parseOl(int);
+  inlineNode parseUl(int);
 };

@@ -13,4 +13,6 @@ add_executable(first_cmake_program
     blockparser.cpp
     inlineparser.h
     inlineparser.cpp
+    stringifier.h
+    stringifier.cpp
 )
