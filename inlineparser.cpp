@@ -23,7 +23,6 @@ std::vector<blockNode> inlineParser::parseInlines() {
   return blocks;
 }
 
-
 void inlineParser::listCheck(std::vector<inlineNode>* inlineList) {
   for (int i = 0; i < inlineList->size(); i++) {
     inlineNode& item = (*inlineList)[i];
@@ -83,6 +82,50 @@ std::vector<inlineNode> inlineParser::parseInlineChildren(int closer) {
       codeNode.children = parseInlineChildren(code);
       children.push_back(codeNode);
     }
+    else if (t == sup) {
+      inlineNode supNode;
+      supNode.type = sup;
+      supNode.value = "^";
+      curTok++;
+      
+      inlineNode supContext;
+      supContext.type = t;
+      supContext.value = (*activeToks)[curTok].value;
+      supNode.children.push_back(supContext);
+
+      curTok++;
+      children.push_back(supNode);
+    }
+    else if (t == sub) {
+      inlineNode subNode;
+      subNode.type = sub;
+      subNode.value = "~";
+      curTok++;
+      
+      inlineNode subContext;
+      subContext.type = t;
+      subContext.value = (*activeToks)[curTok].value;
+      subNode.children.push_back(subContext);
+
+      curTok++;
+      children.push_back(subNode);
+    }
+    else if (t == mark) {
+      inlineNode markNode;
+      markNode.type = mark;
+      markNode.value = "==";
+      curTok++;
+      markNode.children = parseInlineChildren(mark);
+      children.push_back(markNode);
+    }
+    else if (t == del) {
+      inlineNode delNode;
+      delNode.type = del;
+      delNode.value = "~~";
+      curTok++;
+      delNode.children = parseInlineChildren(del);
+      children.push_back(delNode);
+    }
     else if (t == hr) {
       curTok++;
     }
@@ -100,7 +143,7 @@ std::vector<inlineNode> inlineParser::parseInlineChildren(int closer) {
       if (!foundClose) {
         inlineNode textNode;
         textNode.type = text;
-        while (curTok < (*activeToks).size() && ((*activeToks)[curTok].type == word || (*activeToks)[curTok].type == space || (*activeToks)[curTok].type == period || (*activeToks)[curTok].type == comma || (*activeToks)[curTok].type == digit || (*activeToks)[curTok].type == colon || (*activeToks)[curTok].type == fSlash || (*activeToks)[curTok].type == bSlash || (*activeToks)[curTok].type == lBracket)) {
+        while (curTok < (*activeToks).size() && ((*activeToks)[curTok].type == word || (*activeToks)[curTok].type == space || (*activeToks)[curTok].type == period || (*activeToks)[curTok].type == comma || (*activeToks)[curTok].type == digit || (*activeToks)[curTok].type == colon || (*activeToks)[curTok].type == fSlash || (*activeToks)[curTok].type == bSlash || (*activeToks)[curTok].type == lBracket || (*activeToks)[curTok].type == dash)) {
           textNode.value += (*activeToks)[curTok].value;
           curTok++;
         }
@@ -109,14 +152,27 @@ std::vector<inlineNode> inlineParser::parseInlineChildren(int closer) {
       else {
         inlineNode bracketNode;
         bracketNode.type = lBracket;
-        curTok++;
-        bracketNode.children = parseInlineChildren(rBracket);
-        if ((*activeToks)[curTok].type == lParen) {
+        if ((*activeToks)[curTok-1].type == bang) {
           curTok++;
-          bracketNode.type = link;
-          bracketNode.value = "";
-          int nodesize = bracketNode.children.size();
-          bracketNode.children[nodesize-1].children = parseInlineChildren(rParen);
+          bracketNode.children = parseInlineChildren(rBracket);
+          if ((*activeToks)[curTok].type == lParen) {
+            curTok++;
+            bracketNode.type = image;
+            bracketNode.value = "";
+            int nodesizeone = bracketNode.children.size();
+            bracketNode.children[nodesizeone-1].children = parseInlineChildren(rParen);
+          }
+        }
+        else {
+          curTok++;
+          bracketNode.children = parseInlineChildren(rBracket);
+          if ((*activeToks)[curTok].type == lParen) {
+            curTok++;
+            bracketNode.type = link;
+            bracketNode.value = "";
+            int nodesize = bracketNode.children.size();
+            bracketNode.children[nodesize-1].children = parseInlineChildren(rParen);
+          }
         }
         children.push_back(bracketNode);
       }
@@ -136,9 +192,6 @@ std::vector<inlineNode> inlineParser::parseInlineChildren(int closer) {
         curTok++;
       }
       children.push_back(textNode);
-    }
-    else if (t == newLine) {
-      curTok++;
     }
     else if (t == ul || t == ol) {
       inlineNode markerNode;

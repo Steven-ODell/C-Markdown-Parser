@@ -16,6 +16,9 @@ std::string Stringifier::createHTML() {
     if (tree[curBlock].type == h1) {
       outputString.append("<h1>");
       while (tree[curBlock].children.size() > curChild) {
+        if (tree[curBlock].children[curChild].children.size() > 0) {
+          outputString.append(createInlineHTML(tree[curBlock].children[curChild]));
+        }
         outputString.append(tree[curBlock].children[curChild].value);
         curChild++;
       }
@@ -25,6 +28,9 @@ std::string Stringifier::createHTML() {
     else if (tree[curBlock].type == h2) {
       outputString.append("<h2>");
       while (tree[curBlock].children.size() > curChild) {
+        if (tree[curBlock].children[curChild].children.size() > 0) {
+          outputString.append(createInlineHTML(tree[curBlock].children[curChild]));
+        }
         outputString.append(tree[curBlock].children[curChild].value);
         curChild++;
       }
@@ -34,11 +40,50 @@ std::string Stringifier::createHTML() {
     else if (tree[curBlock].type == h3) {
       outputString.append("<h3>");
       while (tree[curBlock].children.size() > curChild) {
+        if (tree[curBlock].children[curChild].children.size() > 0) {
+          outputString.append(createInlineHTML(tree[curBlock].children[curChild]));
+        }
         outputString.append(tree[curBlock].children[curChild].value);
         curChild++;
       }
       curChild = 0;
       outputString.append("</h3>\n");
+    }
+    else if (tree[curBlock].type == h4) {
+      outputString.append("<h4>");
+      while (tree[curBlock].children.size() > curChild) {
+        if (tree[curBlock].children[curChild].children.size() > 0) {
+          outputString.append(createInlineHTML(tree[curBlock].children[curChild]));
+        }
+        outputString.append(tree[curBlock].children[curChild].value);
+        curChild++;
+      }
+      curChild = 0;
+      outputString.append("</h4>\n");
+    }
+    else if (tree[curBlock].type == h5) {
+      outputString.append("<h5>");
+      while (tree[curBlock].children.size() > curChild) {
+        if (tree[curBlock].children[curChild].children.size() > 0) {
+          outputString.append(createInlineHTML(tree[curBlock].children[curChild]));
+        }
+        outputString.append(tree[curBlock].children[curChild].value);
+        curChild++;
+      }
+      curChild = 0;
+      outputString.append("</h5>\n");
+    }
+    else if (tree[curBlock].type == h6) {
+      outputString.append("<h6>");
+      while (tree[curBlock].children.size() > curChild) {
+        if (tree[curBlock].children[curChild].children.size() > 0) {
+          outputString.append(createInlineHTML(tree[curBlock].children[curChild]));
+        }
+        outputString.append(tree[curBlock].children[curChild].value);
+        curChild++;
+      }
+      curChild = 0;
+      outputString.append("</h6>\n");
     }
     else if (tree[curBlock].type == hr) {
       outputString.append("<hr>\n");
@@ -150,7 +195,7 @@ void Stringifier::olLoop(inlineNode& listNode) {
 }
 
 std::string Stringifier::createInlineHTML(inlineNode& node) {
-  if (node.type == text) {
+  if (node.type == text || node.type == dash) {
     return node.value;
   }
   else if (node.type == em) {
@@ -174,14 +219,49 @@ std::string Stringifier::createInlineHTML(inlineNode& node) {
     }
     return "<code>" + inner + "</code>";
   }
+  else if (node.type == mark) {
+    std::string inner;
+    for (size_t i = 0; i < node.children.size(); i++) {
+      inner += createInlineHTML(node.children[i]);
+    }
+    return "<mark>" + inner + "</mark>";
+  }
+  else if (node.type == del) {
+    std::string inner;
+    for (size_t i = 0; i < node.children.size(); i++) {
+      inner += createInlineHTML(node.children[i]);
+    }
+    return "<del>" + inner + "</del>";
+  }
+  else if (node.type == sub) {
+    std::string inner;
+    inner = node.children[0].value;
+    return "<sub>" + inner + "</sub>";
+  }
+  else if (node.type == sup) {
+    std::string inner;
+    inner = node.children[0].value;
+    return "<sup>" + inner + "</sup>";
+  }
   else if (node.type == link) {
     std::string url;
     std::string linkName;
     linkName = node.children[0].value;
-    for (size_t i = 0; i < node.children.size(); i++) {
-      url += createInlineHTML(node.children[i].children[i]);
+    for (size_t i = 0; i < node.children[0].children.size(); i++) {
+      url += createInlineHTML(node.children[0].children[i]);
     }
     return "<a href=\"" + url + "\">" + linkName + "</a>";
+    
+  }
+  else if (node.type == image) {
+    std::string url;
+    std::string imgName;
+    imgName = node.children[0].value;
+    for (size_t i = 0; i < node.children[0].children.size(); i++) {
+      url += createInlineHTML(node.children[0].children[i]);
+    }
+    return "<img src=\"" + url + "\" alt=\"" + imgName + "\">";
+     
     
   }
   return "";

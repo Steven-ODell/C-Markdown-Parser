@@ -128,7 +128,7 @@ std::vector<blockNode> blockParser::createTree() {
       tree.push_back(Node);
       if (cur < tok.size()) cur++;
     }
-    else if (tok[cur].index == 0 && (tok[cur].type == word || tok[cur].type == digit || tok[cur].type == lBracket)) {
+    else if (tok[cur].index == 0 && (tok[cur].type == word || tok[cur].type == digit || tok[cur].type == lBracket || tok[cur].type == code)) {
       std::cout << "Paragraph found" << std::endl;
       parseP();
       continue;

@@ -24,8 +24,10 @@ enum TokenType {
   del,
   sub,
   sup,
+  bang,
   mark,
   code,
+  image,
 
 
   newLine,

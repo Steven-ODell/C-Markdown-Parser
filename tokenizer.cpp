@@ -221,6 +221,14 @@ std::vector<Token> Lexer::tokenize() {
       c++;
       blockindex++;
     }
+    else if (source[c] == '!') {
+      t.type = bang;
+      t.value = "!";
+      t.index = blockindex;
+      tokens.push_back(t);
+      c++;
+      blockindex++;
+    }
     else if (source[c] == '`') {
       t.type = code;
       t.value = "`";
