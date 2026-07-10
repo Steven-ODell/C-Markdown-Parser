@@ -62,18 +62,31 @@ std::vector<inlineNode> inlineParser::parseInlineChildren(int closer) {
       children.push_back(strongEmNode);
     }
     else if (t == strong) {
-      inlineNode strongNode;
-      strongNode.type = strong;
-      curTok++;
-      strongNode.children = parseInlineChildren(strong);
-      children.push_back(strongNode);
+      children.push_back(willThisClose(strong));
     }
     else if (t == em) {
-      inlineNode emNode;
-      emNode.type = em;
-      curTok++;
-      emNode.children = parseInlineChildren(em);
-      children.push_back(emNode);
+      int peek = curTok + 1;
+      bool willClose = false;
+      inlineNode closeNode;
+      while ((peek < (*activeToks).size()) && (*activeToks)[peek].type != newLine) {
+        if ((*activeToks)[peek].type == em) {
+          willClose = true;
+          break;
+        }
+        peek++;
+      }
+      if (willClose == false) {
+        closeNode.type = text;
+        closeNode.value = "*";
+        children.push_back(closeNode);
+        curTok++;
+      }
+      else {
+        closeNode.type = em;
+        curTok++;
+        closeNode.children = parseInlineChildren(em);
+        children.push_back(closeNode);
+      }
     }
     else if (t == code) {
       inlineNode codeNode;
@@ -223,3 +236,30 @@ void inlineParser::printTree(inlineNode Node, int depth) {
     printTree(Node.children[i], depth+1);
   }
 }
+
+inlineNode inlineParser::willThisClose(int type) {
+  int peek = curTok + 1;
+  std::string tValue = (*activeToks)[curTok].value;
+  bool willClose = false;
+  inlineNode closeNode;
+  while ((peek < (*activeToks).size()) && (*activeToks)[peek].type != newLine) {
+    if ((*activeToks)[peek].type == type) {
+      willClose = true;
+      break;
+    }
+    peek++;
+  }
+  if (willClose == false) {
+    closeNode.type = text;
+    closeNode.value = tValue;
+    curTok++;
+    return closeNode;
+  }
+  else {
+    closeNode.type = type;
+    curTok++;
+    closeNode.children = parseInlineChildren(type);
+    return closeNode;
+  }
+}
+

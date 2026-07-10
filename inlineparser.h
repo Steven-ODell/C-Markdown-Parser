@@ -13,6 +13,7 @@ public:
   std::vector<inlineNode> parseInlineChildren(int closer);
   void listCheck(std::vector<inlineNode>*);
   void printTree(inlineNode Node, int depth);
+  inlineNode willThisClose(int type);
 };
 
 

@@ -130,3 +130,7 @@ Defined as an enum in `tokenizer.h`.
 - **Block-level:** `hr h1 h2 h3 h4 h5 h6 codeblock blockquote ul ol p`
 - **Inline:** `em strong strongEm del sub sup bang mark code image link`
 - **Structural:** `newLine space digit word text indent dash lBracket rBracket lParen rParen period comma quote dQuote fSlash bSlash colon semiColon`
+
+this should work * now
+
+and this *should* also
