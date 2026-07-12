@@ -89,10 +89,10 @@ Lists are rendered recursively to match the parser: for each item it emits the i
 - Newlines preserved into output for accurate `<pre>` rendering
 - HTML output for all of the above
 - AST printer (`printTree`) that shows the tree with indentation reflecting nesting depth
+- Unclosed inline delimiters — a stray `*` or `` ` `` with no matching partner is now detected.
 
 ### Known Limitations / Next Up
 
-- **Unclosed inline delimiters** — a stray `*` or `` ` `` with no matching partner isn't detected, so an opening delimiter can consume more content than intended. This is the last robustness gap and the planned final piece of the project (see Roadmap).
 - A leftover `!` can leak into output when a bang doesn't form a complete image; image detection is being moved to a forward-looking check at the bang token.
 - An item that has *both* its own inline formatting *and* a sub-list: storing the parsed inline children currently overwrites the item's existing children, so a sub-list on a formatted item can be lost. Present markup doesn't hit this.
 - Backslash escaping (`\*` for a literal asterisk) is tokenized but not yet honored — an escaped delimiter still opens formatting.

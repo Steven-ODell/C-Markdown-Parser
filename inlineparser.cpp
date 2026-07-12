@@ -55,45 +55,25 @@ std::vector<inlineNode> inlineParser::parseInlineChildren(int closer) {
     return children;
     }
     else if (t == strongEm) {
-      inlineNode strongEmNode;
-      strongEmNode.type = strongEm;
-      curTok++;
-      strongEmNode.children = parseInlineChildren(strongEm);
-      children.push_back(strongEmNode);
+      children.push_back(willThisClose(strongEm));
     }
     else if (t == strong) {
       children.push_back(willThisClose(strong));
     }
     else if (t == em) {
-      int peek = curTok + 1;
-      bool willClose = false;
-      inlineNode closeNode;
-      while ((peek < (*activeToks).size()) && (*activeToks)[peek].type != newLine) {
-        if ((*activeToks)[peek].type == em) {
-          willClose = true;
-          break;
-        }
-        peek++;
-      }
-      if (willClose == false) {
-        closeNode.type = text;
-        closeNode.value = "*";
-        children.push_back(closeNode);
-        curTok++;
-      }
-      else {
-        closeNode.type = em;
-        curTok++;
-        closeNode.children = parseInlineChildren(em);
-        children.push_back(closeNode);
-      }
+      children.push_back(willThisClose(em));
     }
     else if (t == code) {
-      inlineNode codeNode;
-      codeNode.type = code;
+      children.push_back(willThisClose(code));
+    }
+    else if (t == mark) {
+      children.push_back(willThisClose(mark));
+    }
+    else if (t == del) {
+      children.push_back(willThisClose(del));
+    }
+    else if (t == hr) {
       curTok++;
-      codeNode.children = parseInlineChildren(code);
-      children.push_back(codeNode);
     }
     else if (t == sup) {
       inlineNode supNode;
@@ -122,25 +102,6 @@ std::vector<inlineNode> inlineParser::parseInlineChildren(int closer) {
 
       curTok++;
       children.push_back(subNode);
-    }
-    else if (t == mark) {
-      inlineNode markNode;
-      markNode.type = mark;
-      markNode.value = "==";
-      curTok++;
-      markNode.children = parseInlineChildren(mark);
-      children.push_back(markNode);
-    }
-    else if (t == del) {
-      inlineNode delNode;
-      delNode.type = del;
-      delNode.value = "~~";
-      curTok++;
-      delNode.children = parseInlineChildren(del);
-      children.push_back(delNode);
-    }
-    else if (t == hr) {
-      curTok++;
     }
     else if (t == lBracket) {
       int peek = curTok+1;

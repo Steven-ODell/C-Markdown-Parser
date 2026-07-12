@@ -134,3 +134,5 @@ Defined as an enum in `tokenizer.h`.
 this should work * now
 
 and this *should* also
+
+and this even * as ~~ well ** is *** this == true
